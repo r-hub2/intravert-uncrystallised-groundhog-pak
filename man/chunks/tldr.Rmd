@@ -1,0 +1,260 @@
+
+# Package installation
+
+```{asciicast asciicast-setup, include = FALSE, cache = FALSE}
+dir.create(.lib <- tempfile())
+.libPaths(c(.lib, .libPaths()))
+```
+
+## Install a package from CRAN or Bioconductor
+
+```{asciicast tldr-cran}
+#| asciicast_at = "all",
+#| asciicast_knitr_output = "svg",
+#| asciicast_cursor = FALSE
+pak::pkg_install("tibble")
+```
+
+pak automatically sets a CRAN repository and the Bioconductor repositories
+that corresponds to the current R version.
+
+## Install a package from GitHub
+
+```{asciicast tldr-gh}
+pak::pkg_install("tidyverse/tibble")
+```
+
+Use the `user/repo` form.
+You can specify a branch or tag: `user/repo@branch` or `user/repo@tag`.
+
+## Install a package from a URL
+
+```{asciicast tldr-url}
+pak::pkg_install(
+  "url::https://cran.r-project.org/src/contrib/Archive/tibble/tibble_3.1.7.tar.gz"
+)
+```
+
+The URL may point to an R package file, made with `R CMD build`, or a
+`.tar.gz` or `.zip` archive of a package tree.
+
+# Package updates
+
+## Update a package
+
+```{asciicast tldr-update}
+pak::pkg_install("tibble")
+```
+
+`pak::pkg_install()` automatically updates the package.
+
+## Update all dependencies of a package
+
+```{asciicast tldr-update-all}
+pak::pkg_install("tibble", upgrade = TRUE)
+```
+
+`upgrade = TRUE` updates the package itself and all of its dependencies, if
+necessary.
+
+## Reinstall a package
+
+Add `?reinstall` to the package name or package reference in general:
+
+```{asciicast tldr-reinstall}
+pak::pkg_install("tibble?reinstall")
+```
+
+# Dependency lookup
+
+## Dependencies of a CRAN or Bioconductor package
+
+```{asciicast tldr-deps}
+pak::pkg_deps("tibble")
+```
+
+The results are returned in a data frame.
+
+## Dependency tree of a CRAN / Bioconductor package
+
+```{asciicast tldr-deps-tree}
+pak::pkg_deps_tree("tibble")
+```
+
+The results are also silently returned in a data frame.
+
+## Dependency tree of a package on GitHub
+
+```{asciicast tldr-deps-gh}
+pak::pkg_deps_tree("tidyverse/tibble")
+```
+
+Use the `user/repo` form.
+As usual, you can also select a branch, tag, or sha, with the
+`user/repo@branch`, `user/repo@tag` or `user/repo@sha` forms.
+
+## Dependency tree of the package in the current directory
+
+```{asciicast tldr-deps-local-pre, include = FALSE}
+dl <- pak::pkg_download("tibble", platforms = "source", tempdir())
+untar(dl$fulltarget[1])
+```
+
+```{asciicast tldr-deps-local, dependson = "tldr-deps-local-pre"}
+pak::local_deps_tree("tibble")
+```
+
+Assuming package is in directory `tibble`.
+
+## Explain a recursive dependency
+
+How does tibble depend on rlang?
+
+```{asciicast tldr-deps-explain}
+pak::pkg_deps_explain("tibble", "rlang")
+```
+
+Use can also use the `user/repo` form for packages from GitHub,
+`url::...` for packages at URLs, etc.
+
+# Package development
+
+```{asciicast tldr-pkg-pre, include = FALSE, cache = FALSE}
+dl <- pak::pkg_download("tibble", platforms = "source", tempdir())
+untar(dl$fulltarget[1])
+setwd("tibble")
+try(pak:::pkg_data$remote$kill(), silent = TRUE)
+```
+
+## Install dependencies of local package
+
+```{asciicast tldr-pkg-deps}
+pak::local_install_deps()
+```
+
+## Install local package
+
+```{asciicast tldr-pkg-install}
+pak::local_install()
+```
+
+## Install all dependencies of local package
+
+```{asciicast tldr-pkg-dev-deps}
+pak::local_install_dev_deps()
+```
+
+Installs development and optional dependencies as well.
+
+```{asciicast tldr-pkg-post, include = FALSE, cache = FALSE}
+setwd("..")
+try(pak:::pkg_data$remote$kill(), silent = TRUE)
+```
+
+# Repositories
+
+## List current repositories
+
+```{asciicast tldr-repo-list}
+pak::repo_get()
+```
+
+If you haven't set a CRAN or Bioconductor repository, pak does that
+automatically.
+
+## Add custom repository
+
+```{asciicast tldr-repo-add}
+pak::repo_add(rhub = 'https://r-hub.r-universe.dev')
+pak::repo_get()
+```
+
+## Remove custom repositories
+
+```{asciicast tldr-repo-remove, dependson = -1}
+options(repos = getOption("repos")["CRAN"])
+pak::repo_get()
+```
+
+If you set the `repos` option to a CRAN repo only, or unset it completely,
+then pak keeps only CRAN and (by default) Bioconductor.
+
+## Time travel using RSPM
+
+```{asciicast tldr-repo-rspm}
+pak::repo_add(CRAN = "RSPM@2022-06-30")
+pak::repo_get()
+```
+
+Sets a repository that is equivalent to CRAN's state closest to the
+specified date.
+Name this repository `CRAN`, otherwise pak will also add a default CRAN
+repository.
+
+## Time travel using MRAN
+
+```{asciicast tldr-repo-mran}
+pak::repo_add(CRAN = "MRAN@2022-06-30")
+pak::repo_get()
+```
+
+Sets a repository that is equivalent to CRAN's state at the specified date.
+Name this repository `CRAN`, otherwise pak will also add a default CRAN
+repository.
+
+# Caches
+
+By default pak caches both metadata and downloaded packages.
+
+## Inspect metadata cache
+
+```{asciicast tldr-meta-list}
+pak::meta_list()
+```
+
+## Update metadata cache
+
+By default `pkg_install()` and similar functions automatically update the
+metadata for the currently set repositories if it is older than 24 hours.
+You can also force an update manually:
+
+```{asciicast tldr-meta-update}
+pak::meta_update()
+```
+
+## Clean metadata cache
+
+```{asciicast tldr-meta-clean}
+pak::meta_clean(force = TRUE)
+pak::meta_summary()
+```
+
+## Inspect package cache
+
+Downloaded packages are also cached.
+
+```{asciicast tldr-cache-list}
+pak::cache_list()
+```
+
+## View a package cache summary
+
+```{asciicast tldr-cache-summary}
+pak::cache_summary()
+```
+
+## Clean package cache
+
+```r
+pak::cache_clean()
+```
+
+# Libraries
+
+## List packages in a library
+
+```{asciicast tldr-lib-list}
+pak::lib_status(Sys.getenv("R_LIBS_USER"))
+```
+
+Pass the directory of the library as the argument.
